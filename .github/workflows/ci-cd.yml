@@ -1,72 +1,73 @@
-name: CI/CD Pipeline 
+name: CI/CD Pipeline
 
 on:
   push:
-  branches:
-    - main
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
 jobs:
   test:
-  runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-  steps:
-  - uses: actions/checkout@v2
+    steps:
+      - uses: actions/checkout@v3  # Updated to v3 (v2 is outdated)
 
-  - name: Set up Node.js
-    uses: actions/setup-node@v2
-    with:
-      node-version: '16'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3  # Updated to v3
+        with:
+          node-version: '16'
 
-  - name: Install dependencies
-    run: npm install
+      - name: Install dependencies
+        run: npm install
 
-  - name: Run tests
-    run: npm test
-    env:
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_DATABASE: ${{ secrets.DB_DATABASE }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        DB_PORT: ${{ secrets.DB_PORT }}
-        EMAIL_USER: ${{ secrets.EMAIL_USER }}
-        EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-        DB_POOL_MODE: ${{ secrets.DB_POOL_MODE }}
+      - name: Run tests
+        run: npm test
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          DB_POOL_MODE: ${{ secrets.DB_POOL_MODE }}
 
   build:
-  needs: test
-  runs-on: ubuntu-latest
+    needs: test
+    runs-on: ubuntu-latest
 
-  steps:
-  - uses: actions/checkout@v2
+    steps:
+      - uses: actions/checkout@v3  # Updated to v3
 
-  - name: Login to Docker Hub
-    uses: docker/login-action@v1
-    with:
-     username: ${{ secrets.DOCKER_HUB_USERNAME }}
-     password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2  # Updated to v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-  - name: Build and Push Docker Images
-    uses: actions/build-push-action@v2
-    with:
-      context: .
-      push: true
-      tags: ${{ secrets.DOCKER_HUB_USERNAME }}/email-quote-service:latest
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5  # Updated to v5 (actions/build-push-action is outdated)
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/email-quote-service:latest
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'  # Only deploy on push to main, not PRs
 
     steps:
-    - name: Deploy to Production
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /mnt/c/Users/hario/Backend/Projects/Email-Signup-with-Quote-Service
-          docker-compose pull
-          docker-compose up -d
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /mnt/c/Users/hario/Backend/Projects/Email-Signup-with-Quote-Service
+            docker-compose pull
+            docker-compose up -d
