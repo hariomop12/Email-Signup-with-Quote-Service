@@ -1,8 +1,7 @@
 const express = require("express");
 const userRouter = require("./routes/userRoutes");
 require("dotenv").config();
-require("./cron/sendQuotes"); // Start the cron job
-const pool = require("./config/db"); // Import the database pool
+const pool = require("./config/db");
 
 const app = express();
 
@@ -13,7 +12,7 @@ const checkDbConnection = async () => {
   try {
     const client = await pool.connect();
     console.log(`✅ Connected to the database on thread ${client.processID} 🚀`);
-    client.release(); // ✅ Release the connection
+    client.release();
   } catch (error) {
     console.error(`❌ Database Connection Error: ${error.message}`);
   }
@@ -24,9 +23,12 @@ checkDbConnection();
 // Route
 app.use("/api/v1/users", userRouter);
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+// Only start the server if this file is run directly
+if (require.main === module) {
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;

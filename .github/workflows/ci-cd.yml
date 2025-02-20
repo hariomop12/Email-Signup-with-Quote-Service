@@ -71,3 +71,6 @@ jobs:
             cd /mnt/c/Users/hario/Backend/Projects/Email-Signup-with-Quote-Service
             docker-compose pull
             docker-compose up -d
+
+
+            
