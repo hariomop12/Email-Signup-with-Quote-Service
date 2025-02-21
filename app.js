@@ -23,6 +23,10 @@ checkDbConnection();
 // Route
 app.use("/api/v1/users", userRouter);
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the User API");
+});
+
 // Only start the server if this file is run directly
 if (require.main === module) {
   const PORT = process.env.PORT || 5001;
